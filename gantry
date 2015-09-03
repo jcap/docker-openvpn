@@ -10,7 +10,7 @@ create-data)
   docker run -d --name ${OVPN_DATA} -v /etc/openvpn phusion/baseimage /sbin/my_init -- /bin/true
   ;;
 init-vpn)
-  docker run --volumes-from ${OVPN_DATA} --rm ${OVPN_IMAGE} /sbin/my_init -- ovpn_genconfig -u udp://vpn.jcap.me
+  docker run --volumes-from ${OVPN_DATA} --rm ${OVPN_IMAGE} /sbin/my_init -- ovpn_genconfig -u udp://vpn.jcap.me -C AES-256-CBC
   docker run --volumes-from ${OVPN_DATA} --rm -it ${OVPN_IMAGE} /sbin/my_init -- ovpn_initpki
   ;;
 start-vpn)
