@@ -14,7 +14,10 @@ init-vpn)
   docker run --volumes-from ${OVPN_DATA} --rm -it ${OVPN_IMAGE} /sbin/my_init -- ovpn_initpki
   ;;
 start-vpn)
-  docker run --name openvpn --volumes-from ${OVPN_DATA} -d -p 1194:1194/udp --cap-add=NET_ADMIN -e DEBUG=${OVPN_DEBUG} ${OVPN_IMAGE}
+  docker run --name openvpn --volumes-from ${OVPN_DATA} -d -p 1194:1194/udp --cap-add=NET_ADMIN -e DEBUG=${OVPN_DEBUG} ${OVPN_IMAGE} /sbin/my_init -- ovpn_run
+  ;;
+stop-vpn)
+  docker stop openvpn
   ;;
 gen-client)
   docker run --volumes-from $OVPN_DATA --rm -it jcap/openvpn /sbin/my_init -- easyrsa build-client-full $2 nopass
