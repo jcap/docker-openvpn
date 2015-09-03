@@ -37,6 +37,8 @@ OpenVPN server in a Docker container complete with an EasyRSA PKI CA.
 
         ./gantry get-client CLIENTNAME > CLIENTNAME.ovpn
 
+## Advanced
+
 * Enable debug in vpn.envs before starting VPN server
 
         OVPN_DEBUG=1 ./gantry start-vpn
@@ -44,6 +46,16 @@ OpenVPN server in a Docker container complete with an EasyRSA PKI CA.
 * Attach shell to openvpn server container
 
         ./gantry shell
+
+## Backup & Restore
+
+* Backup to a file (See ['backup docs`](/docs/backup.md) for discussion on security).
+
+        ./gantry backup openvpn.tar.xz
+
+* Restore backup to a new data volume
+
+        ./gantry restore openvpn.tar.xz
 
 ## How Does It Work?
 
@@ -78,8 +90,7 @@ We use `tun` mode, because it works on the widest range of devices.
 `tap` mode, for instance, does not work on Android, except if the device
 is rooted.
 
-The topology used is `net30`, because it works on the widest range of OS.
-`p2p`, for instance, does not work on Windows.
+The topology used is `subnet`.
 
 The UDP server uses`192.168.255.0/24` for dynamic clients by default.
 
@@ -157,9 +168,4 @@ of a guarantee in the future.
 ## Tested On
 
 * Docker hosts:
-  * server a [Digital Ocean](https://www.digitalocean.com/?refcode=d19f7fe88c94) Droplet with 512 MB RAM running Ubuntu 14.04
-* Clients
-  * Android App OpenVPN Connect 1.1.14 (built 56)
-     * OpenVPN core 3.0 android armv7a thumb2 32-bit
-  * OS X Mavericks with Tunnelblick 3.4beta26 (build 3828) using openvpn-2.3.4
-  * ArchLinux OpenVPN pkg 2.3.4-1
+  * [Linode Server](https://www.linode.com/?r=b01e9da15ba25ee1f9aa58e1ea0d4bb75f039d33) running Ubuntu 15.04 with OverlayFS
