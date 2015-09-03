@@ -2,15 +2,17 @@
 
 source vpn.envs
 
+BASEIMAGE="phusion/baseimage"
+
 case $1 in
 build-image)
   docker build -t ${OVPN_IMAGE} .
   ;;
 create-data)
-  docker run -d --name ${OVPN_DATA} -v /etc/openvpn phusion/baseimage /sbin/my_init -- /bin/true
+  docker run -d --name ${OVPN_DATA} -v /etc/openvpn ${BASEIMAGE} /sbin/my_init -- /bin/true
   ;;
 init-vpn)
-  docker run --volumes-from ${OVPN_DATA} --rm ${OVPN_IMAGE} /sbin/my_init -- ovpn_genconfig -u udp://vpn.jcap.me -C AES-256-CBC
+  docker run --volumes-from ${OVPN_DATA} --rm ${OVPN_IMAGE} /sbin/my_init -- ovpn_genconfig -u udp://vpn.jcap.me -C AES-256-CBC -c
   docker run --volumes-from ${OVPN_DATA} --rm -it ${OVPN_IMAGE} /sbin/my_init -- ovpn_initpki
   ;;
 start-vpn)
@@ -27,5 +29,11 @@ get-client)
   ;;
 shell)
   docker run --rm --name openvpn-shell -i -t --volumes-from ${OVPN_DATA} ${OVPN_IMAGE} /sbin/my_init -- /bin/bash
+  ;;
+backup)
+  docker run --volumes-from ${OVPN_DATA} --rm ${BASEIMAGE} /sbin/my_init -- tar -cvf - -C /etc openvpn | xz > $2
+  ;;
+restore)
+  xzcat $2 | docker run --name ${OVPN_DATA} -v /etc/openvpn -i ${BASEIMAGE} /sbin/my_init -- tar -xvf - -C /etc
   ;;
 esac
