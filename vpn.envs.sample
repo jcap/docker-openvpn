@@ -1,0 +1,5 @@
+
+OVPN_HOST="my.little.vpn"
+OVPN_DATA="openvpn-data"
+OVPN_IMAGE="jcap/openvpn"
+OVPN_DEBUG=0

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+source vpn.envs
+
+case $1 in
+build-image)
+  docker build -t ${OVPN_IMAGE} .
+  ;;
+create-data)
+  docker run -d --name ${OVPN_DATA} -v /etc/openvpn phusion/baseimage /sbin/my_init -- /bin/true
+  ;;
+init-vpn)
+  docker run --volumes-from ${OVPN_DATA} --rm ${OVPN_IMAGE} /sbin/my_init -- ovpn_genconfig -u udp://vpn.jcap.me
+  docker run --volumes-from ${OVPN_DATA} --rm -it ${OVPN_IMAGE} /sbin/my_init -- ovpn_initpki
+  ;;
+start-vpn)
+  docker run --name openvpn --volumes-from ${OVPN_DATA} -d -p 1194:1194/udp --cap-add=NET_ADMIN -e DEBUG=${OVPN_DEBUG} ${OVPN_IMAGE}
+  ;;
+gen-client)
+  docker run --volumes-from $OVPN_DATA --rm -it jcap/openvpn /sbin/my_init -- easyrsa build-client-full $2 nopass
+  ;;
+get-client)
+  docker run --volumes-from $OVPN_DATA --rm jcap/openvpn /sbin/my_init -- ovpn_getclient $2
+  ;;
+shell)
+  docker run --rm --name openvpn-shell -i -t --volumes-from ${OVPN_DATA} ${OVPN_IMAGE} /sbin/my_init -- /bin/bash
+  ;;
+esac
