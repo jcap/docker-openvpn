@@ -9,10 +9,11 @@ OpenVPN server in a Docker container complete with an EasyRSA PKI CA.
 ## Quick Start
 
 * Setup envs:
+
         cp vpn.envs.sample vpn.envs
         vim vpn.envs
 
-* Build the image (option)
+* Build the image (optional)
 
         ./gantry build-image
 
