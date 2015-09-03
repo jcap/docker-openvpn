@@ -36,6 +36,7 @@ client
 nobind
 dev $OVPN_DEVICE
 remote-cert-tls server
+cipher AES-256-CBC
 
 remote $OVPN_CN $OVPN_PORT $OVPN_PROTO
 "

@@ -177,6 +177,9 @@ fi
 cat > "$conf" <<EOF
 server $(getroute $OVPN_SERVER)
 verb 3
+
+cipher AES-256-CBC
+
 key $EASYRSA_PKI/private/${OVPN_CN}.key
 ca $EASYRSA_PKI/ca.crt
 cert $EASYRSA_PKI/issued/${OVPN_CN}.crt
@@ -186,6 +189,8 @@ key-direction 0
 keepalive 10 60
 persist-key
 persist-tun
+
+topology subnet
 
 proto $OVPN_PROTO
 # Rely on Docker to do port mapping, internally always 1194
