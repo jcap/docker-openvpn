@@ -2,4 +2,6 @@
 OVPN_HOST="my.little.vpn"
 OVPN_DATA="openvpn-data"
 OVPN_IMAGE="jcap/openvpn"
+OVPN_SUBNET="192.168.10.0/24"
+OVPN_STATICS="192.168.11.0/24"
 OVPN_DEBUG=0
