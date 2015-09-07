@@ -12,20 +12,31 @@ create-data)
   docker run -d --name ${OVPN_DATA} -v /etc/openvpn ${BASEIMAGE} /sbin/my_init -- /bin/true
   ;;
 init-vpn)
-  docker run --volumes-from ${OVPN_DATA} --rm ${OVPN_IMAGE} /sbin/my_init -- ovpn_genconfig -u udp://vpn.jcap.me -C AES-256-CBC -c
+  docker run --volumes-from ${OVPN_DATA} --rm ${OVPN_IMAGE} /sbin/my_init -- \
+    ovpn_genconfig -u udp://${OVPN_HOST} -C AES-256-CBC -c -s 10.31.0.0/24 -r 10.31.1.0/24
   docker run --volumes-from ${OVPN_DATA} --rm -it ${OVPN_IMAGE} /sbin/my_init -- ovpn_initpki
   ;;
 start-vpn)
-  docker run --name openvpn --volumes-from ${OVPN_DATA} -d -p 1194:1194/udp --cap-add=NET_ADMIN -e DEBUG=${OVPN_DEBUG} ${OVPN_IMAGE} /sbin/my_init -- ovpn_run
+  docker run --name openvpn --volumes-from ${OVPN_DATA} -d \
+    -p 1194:1194/udp --cap-add=NET_ADMIN                   \
+    -e DEBUG=${OVPN_DEBUG}                                 \
+    ${OVPN_IMAGE} /sbin/my_init --                         \
+    ovpn_run
   ;;
 stop-vpn)
   docker stop openvpn
   ;;
 gen-client)
-  docker run --volumes-from $OVPN_DATA --rm -it jcap/openvpn /sbin/my_init -- easyrsa build-client-full $2 nopass
+  docker run --volumes-from $OVPN_DATA --rm -it jcap/openvpn /sbin/my_init -- \
+    easyrsa build-client-full $2 nopass
   ;;
 get-client)
-  docker run --volumes-from $OVPN_DATA --rm jcap/openvpn /sbin/my_init -- ovpn_getclient $2
+  docker run --volumes-from $OVPN_DATA --rm jcap/openvpn /sbin/my_init --quiet -- \
+    ovpn_getclient $2 > ${2}.ovpn
+  ;;
+list-clients)
+  docker run --volumes-from $OVPN_DATA --rm jcap/openvpn /sbin/my_init --quiet -- \
+    cat pki/index.txt | awk -F= '{print $2}' |grep -v ${OVPN_HOST}
   ;;
 shell)
   docker run --rm --name openvpn-shell -i -t --volumes-from ${OVPN_DATA} ${OVPN_IMAGE} /sbin/my_init -- /bin/bash
@@ -35,5 +46,8 @@ backup)
   ;;
 restore)
   xzcat $2 | docker run --name ${OVPN_DATA} -v /etc/openvpn -i ${BASEIMAGE} /sbin/my_init -- tar -xvf - -C /etc
+  ;;
+*)
+  echo "./gantry {build-image, create-data, init-vpn, start-vpn, stop-vpn, gen-client, get-client, list-clients, shell, backup, restore}"
   ;;
 esac
