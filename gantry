@@ -6,14 +6,14 @@ BASEIMAGE="phusion/baseimage"
 
 case $1 in
 build-image)
-  docker build -t ${OVPN_IMAGE} .
+  docker build --no-cache --pull -t ${OVPN_IMAGE} .
   ;;
 create-data)
   docker run -d --name ${OVPN_DATA} -v /etc/openvpn ${BASEIMAGE} /sbin/my_init -- /bin/true
   ;;
 init-vpn)
   docker run --volumes-from ${OVPN_DATA} --rm ${OVPN_IMAGE} /sbin/my_init -- \
-    ovpn_genconfig -u udp://${OVPN_HOST} -C AES-256-CBC -c -s 10.31.0.0/24 -r 10.31.1.0/24
+    ovpn_genconfig -u udp://${OVPN_HOST} -C AES-256-CBC -c -s ${OVPN_SUBNET} -r ${OVPN_STATICS}
   docker run --volumes-from ${OVPN_DATA} --rm -it ${OVPN_IMAGE} /sbin/my_init -- ovpn_initpki
   ;;
 start-vpn)
@@ -27,16 +27,33 @@ stop-vpn)
   docker stop openvpn
   ;;
 gen-client)
-  docker run --volumes-from $OVPN_DATA --rm -it jcap/openvpn /sbin/my_init -- \
+  docker run --volumes-from $OVPN_DATA --rm -it $OVPN_IMAGE /sbin/my_init -- \
     easyrsa build-client-full $2 nopass
   ;;
 get-client)
-  docker run --volumes-from $OVPN_DATA --rm jcap/openvpn /sbin/my_init --quiet -- \
+  docker run --volumes-from $OVPN_DATA --rm $OVPN_IMAGE /sbin/my_init --quiet -- \
     ovpn_getclient $2 > ${2}.ovpn
   ;;
+gen-p12)
+  docker run -i --volumes-from $OVPN_DATA --rm $OVPN_IMAGE /sbin/my_init --quiet -- \
+    ovpn_p12 $2
+  ;;
+get-p12)
+  docker run --volumes-from $OVPN_DATA --rm $OVPN_IMAGE /sbin/my_init --quiet -- \
+    cat pki/private/${2}.p12 > ${2}.p12
+  ;;
 list-clients)
-  docker run --volumes-from $OVPN_DATA --rm jcap/openvpn /sbin/my_init --quiet -- \
+  docker run --volumes-from $OVPN_DATA --rm $OVPN_IMAGE /sbin/my_init --quiet -- \
     cat pki/index.txt | awk -F= '{print $2}' |grep -v ${OVPN_HOST}
+  ;;
+set-static)
+  docker run --volumes-from $OVPN_DATA -i --rm $OVPN_IMAGE   \
+    /sbin/my_init --quiet --                                  \
+    mkdir -p /etc/openvpn/ccd
+  echo "ifconfig-push $3 255.255.255.0" |                     \
+    docker run --volumes-from $OVPN_DATA -i --rm $OVPN_IMAGE \
+    /sbin/my_init --quiet --                                  \
+    tee /etc/openvpn/ccd/$2
   ;;
 shell)
   docker run --rm --name openvpn-shell -i -t --volumes-from ${OVPN_DATA} ${OVPN_IMAGE} /sbin/my_init -- /bin/bash
