@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#
+# export pk12
+#
+
+set -e
+
+source "$OPENVPN/ovpn_env.sh"
+
+# Provides a sufficient warning before erasing pre-existing files
+easyrsa export-p12 $1
