@@ -18,6 +18,7 @@ init-vpn)
   ;;
 start-vpn)
   docker run --name openvpn --volumes-from ${OVPN_DATA} -d \
+    --restart=always                                       \
     -p 1194:1194/udp --cap-add=NET_ADMIN                   \
     -e DEBUG=${OVPN_DEBUG}                                 \
     ${OVPN_IMAGE} /sbin/my_init --                         \
