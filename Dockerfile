@@ -6,6 +6,7 @@ FROM phusion/baseimage:latest
 MAINTAINER John Cappiello <john@johncappiello.com>
 
 RUN apt-get update && \
+    apt-get dist-upgrade -y && \
     apt-get install -y openvpn iptables git-core && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
